@@ -1,0 +1,6 @@
+class,test_boxes,ap50_own,ap50_95_own,ap50_ultralytics,reliable
+loose-meat,3,0.7255,0.2627,0.665,False
+packaging-error,23,0.58,0.1843,0.5198,True
+twisted-meat,4,0.0,0.0,0.0144,False
+unsealed,49,0.8179,0.5205,0.8277,True
+wrinkle,0,,,,False
