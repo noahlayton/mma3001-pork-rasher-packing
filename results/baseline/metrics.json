@@ -1,0 +1,113 @@
+{
+  "chosen_C": 0.001,
+  "valid_sweep": [
+    {
+      "C": 0.0001,
+      "tp": 95,
+      "fp": 7,
+      "fn": 11,
+      "tn": 7,
+      "precision": 0.9314,
+      "recall": 0.8962,
+      "f1": 0.9135,
+      "accuracy": 0.85,
+      "false_reject_rate": 0.5
+    },
+    {
+      "C": 0.001,
+      "tp": 96,
+      "fp": 5,
+      "fn": 10,
+      "tn": 9,
+      "precision": 0.9505,
+      "recall": 0.9057,
+      "f1": 0.9275,
+      "accuracy": 0.875,
+      "false_reject_rate": 0.3571
+    },
+    {
+      "C": 0.01,
+      "tp": 96,
+      "fp": 7,
+      "fn": 10,
+      "tn": 7,
+      "precision": 0.932,
+      "recall": 0.9057,
+      "f1": 0.9187,
+      "accuracy": 0.8583,
+      "false_reject_rate": 0.5
+    },
+    {
+      "C": 0.1,
+      "tp": 95,
+      "fp": 7,
+      "fn": 11,
+      "tn": 7,
+      "precision": 0.9314,
+      "recall": 0.8962,
+      "f1": 0.9135,
+      "accuracy": 0.85,
+      "false_reject_rate": 0.5
+    },
+    {
+      "C": 1.0,
+      "tp": 92,
+      "fp": 8,
+      "fn": 14,
+      "tn": 6,
+      "precision": 0.92,
+      "recall": 0.8679,
+      "f1": 0.8932,
+      "accuracy": 0.8167,
+      "false_reject_rate": 0.5714
+    }
+  ],
+  "test": {
+    "tp": 54,
+    "fp": 4,
+    "fn": 14,
+    "tn": 8,
+    "precision": 0.9310344827586207,
+    "recall": 0.7941176470588235,
+    "f1": 0.8571428571428571,
+    "accuracy": 0.775,
+    "false_reject_rate": 0.3333333333333333
+  },
+  "test_ci95": {
+    "accuracy": [
+      0.675,
+      0.8625
+    ],
+    "recall": [
+      0.69115057995029,
+      0.8805970149253731
+    ],
+    "precision": [
+      0.8620172413793104,
+      0.9841269841269841
+    ],
+    "f1": [
+      0.7833333333333333,
+      0.9160305343511451
+    ],
+    "false_reject_rate": [
+      0.06666666666666667,
+      0.625
+    ]
+  },
+  "n_test": 80,
+  "n_test_defective": 68,
+  "reject_all_test": {
+    "tp": 68,
+    "fp": 12,
+    "fn": 0,
+    "tn": 0,
+    "precision": 0.85,
+    "recall": 1.0,
+    "f1": 0.9189189189189189,
+    "accuracy": 0.85,
+    "false_reject_rate": 1.0
+  },
+  "latency_ms_median": 5.58,
+  "n_features": 6068
+}
