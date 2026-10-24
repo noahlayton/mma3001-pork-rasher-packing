@@ -4,9 +4,10 @@ Two levels of evaluation are provided:
 
 * **Object level** – intersection-over-union (IoU), greedy matching of
   predictions to ground truth, and Average Precision (AP) computed with
-  all-point interpolation of the precision-recall curve (the same definition
-  used by COCO/Ultralytics). This independent implementation is used to
-  cross-check the mAP reported by Ultralytics.
+  all-point interpolation of the precision-recall curve. COCO and Ultralytics
+  sample the same monotone precision envelope at 101 recall points instead of
+  integrating it exactly, so results agree to within ~0.005. This independent
+  implementation is used to cross-check the mAP reported by Ultralytics.
 * **Tray level** – the binary PASS/FAIL decision that matters on a production
   line, summarised by a confusion matrix, precision, recall, F1 and accuracy.
 """
