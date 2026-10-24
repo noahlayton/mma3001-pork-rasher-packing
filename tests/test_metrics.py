@@ -2,6 +2,8 @@
 
 import math
 
+import numpy as np
+
 import pytest
 
 from porkqc.labels import Box
@@ -144,3 +146,25 @@ def test_binary_metrics_rejects_bad_input():
         binary_metrics([], [])
     with pytest.raises(ValueError):
         binary_metrics([True], [True, False])
+
+
+def test_average_precision_agrees_with_ultralytics_reference():
+    """Cross-check the AP integration against Ultralytics' ``compute_ap``.
+
+    Ultralytics samples the precision envelope at 101 recall points, whereas
+    ``average_precision`` integrates it exactly, so small differences
+    (< 0.01) are expected; anything larger would indicate a bug.
+    """
+    compute_ap = pytest.importorskip("ultralytics.utils.metrics").compute_ap
+    rng = np.random.default_rng(0)
+    checked = 0
+    while checked < 100:
+        n, n_gt = int(rng.integers(5, 300)), int(rng.integers(1, 100))
+        conf = rng.random(n)
+        is_tp = rng.random(n) < rng.random()
+        if is_tp.sum() > n_gt:
+            continue
+        cum = np.cumsum(is_tp[np.argsort(-conf)])
+        reference = compute_ap(cum / n_gt, cum / np.arange(1, n + 1))[0]
+        assert average_precision(conf, is_tp, n_gt) == pytest.approx(reference, abs=0.01)
+        checked += 1
