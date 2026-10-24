@@ -148,6 +148,42 @@ def evaluate_map(
     return {"ap": ap, "map": float(np.nanmean(ap)) if np.any(n_gt) else float("nan")}
 
 
+def bootstrap_ci(
+    y_true: Sequence[bool],
+    y_pred: Sequence[bool],
+    metric: str = "recall",
+    n_boot: int = 2000,
+    alpha: float = 0.05,
+    seed: int = 0,
+) -> tuple[float, float, float]:
+    """Percentile-bootstrap confidence interval for a tray-level metric.
+
+    The test set is small (80 images), so a single score hides a lot of
+    uncertainty. Images are resampled with replacement ``n_boot`` times, the
+    metric is recomputed on each resample, and the ``alpha/2`` and
+    ``1 - alpha/2`` percentiles of those values form the interval.
+
+    Args:
+        y_true: ``True`` where the tray is truly defective.
+        y_pred: ``True`` where the tray was rejected.
+        metric: Any key returned by :func:`binary_metrics` (e.g. ``"recall"``).
+        n_boot: Number of bootstrap resamples.
+        alpha: 1 - confidence level (0.05 gives a 95% interval).
+        seed: Random seed so the interval is reproducible.
+
+    Returns:
+        ``(point_estimate, lower, upper)``.
+    """
+    yt = np.asarray(y_true, dtype=bool)
+    yp = np.asarray(y_pred, dtype=bool)
+    point = binary_metrics(yt, yp)[metric]
+    rng = np.random.default_rng(seed)
+    idx = rng.integers(0, yt.size, size=(n_boot, yt.size))
+    stats = [binary_metrics(yt[i], yp[i])[metric] for i in idx]
+    lo, hi = np.percentile(stats, [100 * alpha / 2, 100 * (1 - alpha / 2)])
+    return float(point), float(lo), float(hi)
+
+
 def binary_metrics(y_true: Sequence[bool], y_pred: Sequence[bool]) -> dict:
     """Confusion matrix and summary scores for the tray PASS/FAIL decision.
 
