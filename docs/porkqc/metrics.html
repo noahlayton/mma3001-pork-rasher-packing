@@ -48,6 +48,9 @@
             <li>
                     <a class="function" href="#binary_metrics">binary_metrics</a>
             </li>
+            <li>
+                    <a class="function" href="#paired_bootstrap_diff">paired_bootstrap_diff</a>
+            </li>
     </ul>
 
 
@@ -308,6 +311,48 @@ line, summarised by a confusion matrix, precision, recall, F1 and accuracy.</li>
 </span><span id="L-222"><a href="#L-222"><span class="linenos">222</span></a>        <span class="s2">"accuracy"</span><span class="p">:</span> <span class="p">(</span><span class="n">tp</span> <span class="o">+</span> <span class="n">tn</span><span class="p">)</span> <span class="o">/</span> <span class="n">yt</span><span class="o">.</span><span class="n">size</span><span class="p">,</span>
 </span><span id="L-223"><a href="#L-223"><span class="linenos">223</span></a>        <span class="s2">"false_reject_rate"</span><span class="p">:</span> <span class="n">fp</span> <span class="o">/</span> <span class="p">(</span><span class="n">fp</span> <span class="o">+</span> <span class="n">tn</span><span class="p">)</span> <span class="k">if</span> <span class="n">fp</span> <span class="o">+</span> <span class="n">tn</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">,</span>
 </span><span id="L-224"><a href="#L-224"><span class="linenos">224</span></a>    <span class="p">}</span>
+</span><span id="L-225"><a href="#L-225"><span class="linenos">225</span></a>
+</span><span id="L-226"><a href="#L-226"><span class="linenos">226</span></a>
+</span><span id="L-227"><a href="#L-227"><span class="linenos">227</span></a><span class="k">def</span><span class="w"> </span><span class="nf">paired_bootstrap_diff</span><span class="p">(</span>
+</span><span id="L-228"><a href="#L-228"><span class="linenos">228</span></a>    <span class="n">y_true</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">bool</span><span class="p">],</span>
+</span><span id="L-229"><a href="#L-229"><span class="linenos">229</span></a>    <span class="n">pred_a</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">bool</span><span class="p">],</span>
+</span><span id="L-230"><a href="#L-230"><span class="linenos">230</span></a>    <span class="n">pred_b</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">bool</span><span class="p">],</span>
+</span><span id="L-231"><a href="#L-231"><span class="linenos">231</span></a>    <span class="n">metric</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"recall"</span><span class="p">,</span>
+</span><span id="L-232"><a href="#L-232"><span class="linenos">232</span></a>    <span class="n">n_boot</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5000</span><span class="p">,</span>
+</span><span id="L-233"><a href="#L-233"><span class="linenos">233</span></a>    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
+</span><span id="L-234"><a href="#L-234"><span class="linenos">234</span></a>    <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+</span><span id="L-235"><a href="#L-235"><span class="linenos">235</span></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span id="L-236"><a href="#L-236"><span class="linenos">236</span></a><span class="w">    </span><span class="sd">"""Paired bootstrap test of ``metric(B) - metric(A)`` on the same images.</span>
+</span><span id="L-237"><a href="#L-237"><span class="linenos">237</span></a>
+</span><span id="L-238"><a href="#L-238"><span class="linenos">238</span></a><span class="sd">    Both inspectors are evaluated on the *same* resampled images, so image</span>
+</span><span id="L-239"><a href="#L-239"><span class="linenos">239</span></a><span class="sd">    difficulty cancels out and the interval is much tighter than comparing</span>
+</span><span id="L-240"><a href="#L-240"><span class="linenos">240</span></a><span class="sd">    two separate confidence intervals.</span>
+</span><span id="L-241"><a href="#L-241"><span class="linenos">241</span></a>
+</span><span id="L-242"><a href="#L-242"><span class="linenos">242</span></a><span class="sd">    Args:</span>
+</span><span id="L-243"><a href="#L-243"><span class="linenos">243</span></a><span class="sd">        y_true: ``True`` where the tray is truly defective.</span>
+</span><span id="L-244"><a href="#L-244"><span class="linenos">244</span></a><span class="sd">        pred_a: Rejections by inspector A (e.g. the baseline).</span>
+</span><span id="L-245"><a href="#L-245"><span class="linenos">245</span></a><span class="sd">        pred_b: Rejections by inspector B (e.g. the candidate model).</span>
+</span><span id="L-246"><a href="#L-246"><span class="linenos">246</span></a><span class="sd">        metric: Any key returned by :func:`binary_metrics`.</span>
+</span><span id="L-247"><a href="#L-247"><span class="linenos">247</span></a><span class="sd">        n_boot: Number of bootstrap resamples.</span>
+</span><span id="L-248"><a href="#L-248"><span class="linenos">248</span></a><span class="sd">        alpha: 1 - confidence level.</span>
+</span><span id="L-249"><a href="#L-249"><span class="linenos">249</span></a><span class="sd">        seed: Random seed.</span>
+</span><span id="L-250"><a href="#L-250"><span class="linenos">250</span></a>
+</span><span id="L-251"><a href="#L-251"><span class="linenos">251</span></a><span class="sd">    Returns:</span>
+</span><span id="L-252"><a href="#L-252"><span class="linenos">252</span></a><span class="sd">        Dictionary with ``diff`` (point estimate), ``lower``, ``upper`` and</span>
+</span><span id="L-253"><a href="#L-253"><span class="linenos">253</span></a><span class="sd">        ``p_le_0`` (share of resamples where B was not better; a one-sided</span>
+</span><span id="L-254"><a href="#L-254"><span class="linenos">254</span></a><span class="sd">        bootstrap p-value for "B is better than A").</span>
+</span><span id="L-255"><a href="#L-255"><span class="linenos">255</span></a><span class="sd">    """</span>
+</span><span id="L-256"><a href="#L-256"><span class="linenos">256</span></a>    <span class="n">yt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+</span><span id="L-257"><a href="#L-257"><span class="linenos">257</span></a>    <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">pred_a</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+</span><span id="L-258"><a href="#L-258"><span class="linenos">258</span></a>    <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">pred_b</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+</span><span id="L-259"><a href="#L-259"><span class="linenos">259</span></a>    <span class="n">diff</span> <span class="o">=</span> <span class="n">binary_metrics</span><span class="p">(</span><span class="n">yt</span><span class="p">,</span> <span class="n">b</span><span class="p">)[</span><span class="n">metric</span><span class="p">]</span> <span class="o">-</span> <span class="n">binary_metrics</span><span class="p">(</span><span class="n">yt</span><span class="p">,</span> <span class="n">a</span><span class="p">)[</span><span class="n">metric</span><span class="p">]</span>
+</span><span id="L-260"><a href="#L-260"><span class="linenos">260</span></a>    <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+</span><span id="L-261"><a href="#L-261"><span class="linenos">261</span></a>    <span class="n">idx</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">yt</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">n_boot</span><span class="p">,</span> <span class="n">yt</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
+</span><span id="L-262"><a href="#L-262"><span class="linenos">262</span></a>    <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">binary_metrics</span><span class="p">(</span><span class="n">yt</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">])[</span><span class="n">metric</span><span class="p">]</span> <span class="o">-</span> <span class="n">binary_metrics</span><span class="p">(</span><span class="n">yt</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">])[</span><span class="n">metric</span><span class="p">]</span>
+</span><span id="L-263"><a href="#L-263"><span class="linenos">263</span></a>                  <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">idx</span><span class="p">])</span>
+</span><span id="L-264"><a href="#L-264"><span class="linenos">264</span></a>    <span class="n">lo</span><span class="p">,</span> <span class="n">hi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="p">[</span><span class="mi">100</span> <span class="o">*</span> <span class="n">alpha</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">100</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">alpha</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)])</span>
+</span><span id="L-265"><a href="#L-265"><span class="linenos">265</span></a>    <span class="k">return</span> <span class="p">{</span><span class="s2">"diff"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">diff</span><span class="p">),</span> <span class="s2">"lower"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">lo</span><span class="p">),</span> <span class="s2">"upper"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">hi</span><span class="p">),</span>
+</span><span id="L-266"><a href="#L-266"><span class="linenos">266</span></a>            <span class="s2">"p_le_0"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">d</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">))}</span>
 </span></pre></div>
 
 
@@ -733,6 +778,89 @@ defective tray is the costly error on a production line.</p>
 <ul>
 <li><strong>ValueError:</strong>  If the inputs have different lengths or are empty.</li>
 </ul>
+</div>
+
+
+                </section>
+                <section id="paired_bootstrap_diff">
+                            <input id="paired_bootstrap_diff-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">paired_bootstrap_diff</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">y_true</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span>,</span><span class="param">	<span class="n">pred_a</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span>,</span><span class="param">	<span class="n">pred_b</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span>,</span><span class="param">	<span class="n">metric</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'recall'</span>,</span><span class="param">	<span class="n">n_boot</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5000</span>,</span><span class="param">	<span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span>,</span><span class="param">	<span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span></span><span class="return-annotation">) -> <span class="nb">dict</span>:</span></span>
+
+                <label class="view-source-button" for="paired_bootstrap_diff-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#paired_bootstrap_diff"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="paired_bootstrap_diff-228"><a href="#paired_bootstrap_diff-228"><span class="linenos">228</span></a><span class="k">def</span><span class="w"> </span><span class="nf">paired_bootstrap_diff</span><span class="p">(</span>
+</span><span id="paired_bootstrap_diff-229"><a href="#paired_bootstrap_diff-229"><span class="linenos">229</span></a>    <span class="n">y_true</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">bool</span><span class="p">],</span>
+</span><span id="paired_bootstrap_diff-230"><a href="#paired_bootstrap_diff-230"><span class="linenos">230</span></a>    <span class="n">pred_a</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">bool</span><span class="p">],</span>
+</span><span id="paired_bootstrap_diff-231"><a href="#paired_bootstrap_diff-231"><span class="linenos">231</span></a>    <span class="n">pred_b</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">bool</span><span class="p">],</span>
+</span><span id="paired_bootstrap_diff-232"><a href="#paired_bootstrap_diff-232"><span class="linenos">232</span></a>    <span class="n">metric</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"recall"</span><span class="p">,</span>
+</span><span id="paired_bootstrap_diff-233"><a href="#paired_bootstrap_diff-233"><span class="linenos">233</span></a>    <span class="n">n_boot</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5000</span><span class="p">,</span>
+</span><span id="paired_bootstrap_diff-234"><a href="#paired_bootstrap_diff-234"><span class="linenos">234</span></a>    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
+</span><span id="paired_bootstrap_diff-235"><a href="#paired_bootstrap_diff-235"><span class="linenos">235</span></a>    <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+</span><span id="paired_bootstrap_diff-236"><a href="#paired_bootstrap_diff-236"><span class="linenos">236</span></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span id="paired_bootstrap_diff-237"><a href="#paired_bootstrap_diff-237"><span class="linenos">237</span></a><span class="w">    </span><span class="sd">"""Paired bootstrap test of ``metric(B) - metric(A)`` on the same images.</span>
+</span><span id="paired_bootstrap_diff-238"><a href="#paired_bootstrap_diff-238"><span class="linenos">238</span></a>
+</span><span id="paired_bootstrap_diff-239"><a href="#paired_bootstrap_diff-239"><span class="linenos">239</span></a><span class="sd">    Both inspectors are evaluated on the *same* resampled images, so image</span>
+</span><span id="paired_bootstrap_diff-240"><a href="#paired_bootstrap_diff-240"><span class="linenos">240</span></a><span class="sd">    difficulty cancels out and the interval is much tighter than comparing</span>
+</span><span id="paired_bootstrap_diff-241"><a href="#paired_bootstrap_diff-241"><span class="linenos">241</span></a><span class="sd">    two separate confidence intervals.</span>
+</span><span id="paired_bootstrap_diff-242"><a href="#paired_bootstrap_diff-242"><span class="linenos">242</span></a>
+</span><span id="paired_bootstrap_diff-243"><a href="#paired_bootstrap_diff-243"><span class="linenos">243</span></a><span class="sd">    Args:</span>
+</span><span id="paired_bootstrap_diff-244"><a href="#paired_bootstrap_diff-244"><span class="linenos">244</span></a><span class="sd">        y_true: ``True`` where the tray is truly defective.</span>
+</span><span id="paired_bootstrap_diff-245"><a href="#paired_bootstrap_diff-245"><span class="linenos">245</span></a><span class="sd">        pred_a: Rejections by inspector A (e.g. the baseline).</span>
+</span><span id="paired_bootstrap_diff-246"><a href="#paired_bootstrap_diff-246"><span class="linenos">246</span></a><span class="sd">        pred_b: Rejections by inspector B (e.g. the candidate model).</span>
+</span><span id="paired_bootstrap_diff-247"><a href="#paired_bootstrap_diff-247"><span class="linenos">247</span></a><span class="sd">        metric: Any key returned by :func:`binary_metrics`.</span>
+</span><span id="paired_bootstrap_diff-248"><a href="#paired_bootstrap_diff-248"><span class="linenos">248</span></a><span class="sd">        n_boot: Number of bootstrap resamples.</span>
+</span><span id="paired_bootstrap_diff-249"><a href="#paired_bootstrap_diff-249"><span class="linenos">249</span></a><span class="sd">        alpha: 1 - confidence level.</span>
+</span><span id="paired_bootstrap_diff-250"><a href="#paired_bootstrap_diff-250"><span class="linenos">250</span></a><span class="sd">        seed: Random seed.</span>
+</span><span id="paired_bootstrap_diff-251"><a href="#paired_bootstrap_diff-251"><span class="linenos">251</span></a>
+</span><span id="paired_bootstrap_diff-252"><a href="#paired_bootstrap_diff-252"><span class="linenos">252</span></a><span class="sd">    Returns:</span>
+</span><span id="paired_bootstrap_diff-253"><a href="#paired_bootstrap_diff-253"><span class="linenos">253</span></a><span class="sd">        Dictionary with ``diff`` (point estimate), ``lower``, ``upper`` and</span>
+</span><span id="paired_bootstrap_diff-254"><a href="#paired_bootstrap_diff-254"><span class="linenos">254</span></a><span class="sd">        ``p_le_0`` (share of resamples where B was not better; a one-sided</span>
+</span><span id="paired_bootstrap_diff-255"><a href="#paired_bootstrap_diff-255"><span class="linenos">255</span></a><span class="sd">        bootstrap p-value for "B is better than A").</span>
+</span><span id="paired_bootstrap_diff-256"><a href="#paired_bootstrap_diff-256"><span class="linenos">256</span></a><span class="sd">    """</span>
+</span><span id="paired_bootstrap_diff-257"><a href="#paired_bootstrap_diff-257"><span class="linenos">257</span></a>    <span class="n">yt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+</span><span id="paired_bootstrap_diff-258"><a href="#paired_bootstrap_diff-258"><span class="linenos">258</span></a>    <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">pred_a</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+</span><span id="paired_bootstrap_diff-259"><a href="#paired_bootstrap_diff-259"><span class="linenos">259</span></a>    <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">pred_b</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+</span><span id="paired_bootstrap_diff-260"><a href="#paired_bootstrap_diff-260"><span class="linenos">260</span></a>    <span class="n">diff</span> <span class="o">=</span> <span class="n">binary_metrics</span><span class="p">(</span><span class="n">yt</span><span class="p">,</span> <span class="n">b</span><span class="p">)[</span><span class="n">metric</span><span class="p">]</span> <span class="o">-</span> <span class="n">binary_metrics</span><span class="p">(</span><span class="n">yt</span><span class="p">,</span> <span class="n">a</span><span class="p">)[</span><span class="n">metric</span><span class="p">]</span>
+</span><span id="paired_bootstrap_diff-261"><a href="#paired_bootstrap_diff-261"><span class="linenos">261</span></a>    <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+</span><span id="paired_bootstrap_diff-262"><a href="#paired_bootstrap_diff-262"><span class="linenos">262</span></a>    <span class="n">idx</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">yt</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">n_boot</span><span class="p">,</span> <span class="n">yt</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
+</span><span id="paired_bootstrap_diff-263"><a href="#paired_bootstrap_diff-263"><span class="linenos">263</span></a>    <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">binary_metrics</span><span class="p">(</span><span class="n">yt</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">])[</span><span class="n">metric</span><span class="p">]</span> <span class="o">-</span> <span class="n">binary_metrics</span><span class="p">(</span><span class="n">yt</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">])[</span><span class="n">metric</span><span class="p">]</span>
+</span><span id="paired_bootstrap_diff-264"><a href="#paired_bootstrap_diff-264"><span class="linenos">264</span></a>                  <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">idx</span><span class="p">])</span>
+</span><span id="paired_bootstrap_diff-265"><a href="#paired_bootstrap_diff-265"><span class="linenos">265</span></a>    <span class="n">lo</span><span class="p">,</span> <span class="n">hi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="p">[</span><span class="mi">100</span> <span class="o">*</span> <span class="n">alpha</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">100</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">alpha</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)])</span>
+</span><span id="paired_bootstrap_diff-266"><a href="#paired_bootstrap_diff-266"><span class="linenos">266</span></a>    <span class="k">return</span> <span class="p">{</span><span class="s2">"diff"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">diff</span><span class="p">),</span> <span class="s2">"lower"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">lo</span><span class="p">),</span> <span class="s2">"upper"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">hi</span><span class="p">),</span>
+</span><span id="paired_bootstrap_diff-267"><a href="#paired_bootstrap_diff-267"><span class="linenos">267</span></a>            <span class="s2">"p_le_0"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">d</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">))}</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>Paired bootstrap test of <code>metric(B) - metric(A)</code> on the same images.</p>
+
+<p>Both inspectors are evaluated on the <em>same</em> resampled images, so image
+difficulty cancels out and the interval is much tighter than comparing
+two separate confidence intervals.</p>
+
+<h6 id="arguments">Arguments:</h6>
+
+<ul>
+<li><strong>y_true:</strong>  <code>True</code> where the tray is truly defective.</li>
+<li><strong>pred_a:</strong>  Rejections by inspector A (e.g. the baseline).</li>
+<li><strong>pred_b:</strong>  Rejections by inspector B (e.g. the candidate model).</li>
+<li><strong>metric:</strong>  Any key returned by <code><a href="#binary_metrics">binary_metrics()</a></code>.</li>
+<li><strong>n_boot:</strong>  Number of bootstrap resamples.</li>
+<li><strong>alpha:</strong>  1 - confidence level.</li>
+<li><strong>seed:</strong>  Random seed.</li>
+</ul>
+
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>Dictionary with <code>diff</code> (point estimate), <code>lower</code>, <code>upper</code> and
+  <code>p_le_0</code> (share of resamples where B was not better; a one-sided
+  bootstrap p-value for "B is better than A").</p>
+</blockquote>
 </div>
 
 

@@ -37,7 +37,9 @@ and compression, and benchmarked for production-line speed.
 │   ├── train.py       fine-tune YOLOv8 and evaluate on the test split
 │   ├── baseline.py    train/evaluate the classical baseline
 │   ├── evaluate.py    mAP cross-check, PASS/FAIL threshold, robustness
-│   └── benchmark.py   latency, FLOPs, parameters, memory
+│   ├── benchmark.py   latency, FLOPs, parameters, memory
+│   ├── error_analysis.py  paired bootstrap tests between models, error breakdown
+│   └── compare.py     summary table and report figures
 ├── tests/             pytest unit tests
 ├── docs/              generated HTML API documentation (pdoc)
 ├── results/           metrics tables and figures used in the report
@@ -76,8 +78,13 @@ python scripts/baseline.py                    # 2. classical baseline    -> resu
 # 3. train the YOLO models: open notebooks/train_colab.ipynb in Google Colab (GPU),
 #    or on a local GPU:  python scripts/train.py --model yolov8n.pt --name y8n_640
 python scripts/evaluate.py runs/*/weights/best.pt --robustness     # 4. -> results/eval/
-python scripts/benchmark.py runs/*/weights/best.pt --device cpu    # 5. -> results/benchmark.csv
+python scripts/benchmark.py runs/*/weights/best.pt --device cpu --out results/benchmark_cpu.csv  # 5.
+python scripts/error_analysis.py              # 6. statistical comparison -> results/compare/
+python scripts/compare.py                     # 7. summary table + figures -> results/compare/
 ```
+
+Trained weights are not stored in git (≈70 MB). Re-create them with the Colab
+notebook; the per-epoch training logs are kept in `results/training/`.
 
 All scripts take `--help`. Random seeds are fixed, so results are repeatable.
 

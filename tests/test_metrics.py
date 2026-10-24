@@ -11,6 +11,7 @@ from porkqc.metrics import (
     average_precision,
     binary_metrics,
     bootstrap_ci,
+    paired_bootstrap_diff,
     evaluate_map,
     iou,
     match_detections,
@@ -168,3 +169,19 @@ def test_average_precision_agrees_with_ultralytics_reference():
         reference = compute_ap(cum / n_gt, cum / np.arange(1, n + 1))[0]
         assert average_precision(conf, is_tp, n_gt) == pytest.approx(reference, abs=0.01)
         checked += 1
+
+
+def test_paired_bootstrap_identical_inspectors_give_zero():
+    y = [True] * 20 + [False] * 5
+    p = [True] * 15 + [False] * 10
+    r = paired_bootstrap_diff(y, p, p, n_boot=300)
+    assert r["diff"] == r["lower"] == r["upper"] == 0.0
+
+
+def test_paired_bootstrap_detects_clear_improvement():
+    y = [True] * 40 + [False] * 10
+    weak = [True] * 20 + [False] * 20 + [False] * 10
+    strong = [True] * 40 + [False] * 10
+    r = paired_bootstrap_diff(y, weak, strong, "recall", n_boot=1000)
+    assert r["diff"] == pytest.approx(0.5)
+    assert r["lower"] > 0 and r["p_le_0"] == 0.0
