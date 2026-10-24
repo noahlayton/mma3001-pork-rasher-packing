@@ -72,22 +72,29 @@ def main() -> None:
     from ultralytics import YOLO  # imported here so --help works without torch
 
     data_yaml = write_data_yaml(args.data, args.project / "data_abs.yaml")
-    model = YOLO(args.model)
-    model.train(
-        data=str(data_yaml),
-        epochs=args.epochs,
-        imgsz=args.imgsz,
-        batch=args.batch,
-        patience=args.patience,
-        fraction=args.fraction,
-        device=args.device,
-        seed=args.seed,
-        deterministic=True,
-        project=str(args.project.resolve()),
-        name=args.name,
-        exist_ok=True,
-        plots=True,
-    )
+    last = args.project / args.name / "weights" / "last.pt"
+    finished = (args.project / f"{args.name}_test").exists()
+    if last.exists() and not finished:
+        # A previous session was interrupted (e.g. Colab disconnected): continue
+        # from the last saved epoch with the original settings and optimiser state.
+        print(f"resuming {args.name} from {last}")
+        YOLO(str(last)).train(resume=True)
+    else:
+        YOLO(args.model).train(
+            data=str(data_yaml),
+            epochs=args.epochs,
+            imgsz=args.imgsz,
+            batch=args.batch,
+            patience=args.patience,
+            fraction=args.fraction,
+            device=args.device,
+            seed=args.seed,
+            deterministic=True,
+            project=str(args.project.resolve()),
+            name=args.name,
+            exist_ok=True,
+            plots=True,
+        )
     # Final, unbiased numbers come from the test split, which was never used
     # for training or for choosing the best epoch.
     best = args.project / args.name / "weights" / "best.pt"
