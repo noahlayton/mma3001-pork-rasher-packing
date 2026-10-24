@@ -1,0 +1,7 @@
+class,ultralytics_val,own_on_same_predictions,own_on_predict_boxes,abs_diff_same_inputs
+loose-meat,0.665,0.6667,0.7255,0.0017
+packaging-error,0.5198,0.5204,0.58,0.0006
+twisted-meat,0.0144,0.0147,0.0,0.0003
+unsealed,0.8277,0.8299,0.8179,0.0022
+wrinkle,,,,
+mean (mAP50),0.5067,0.5079,0.5309,0.0012

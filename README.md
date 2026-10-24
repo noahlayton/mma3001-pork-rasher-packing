@@ -38,6 +38,7 @@ and compression, and benchmarked for production-line speed.
 │   ├── baseline.py    train/evaluate the classical baseline
 │   ├── evaluate.py    mAP cross-check, PASS/FAIL threshold, robustness
 │   ├── benchmark.py   latency, FLOPs, parameters, memory
+│   ├── verify_map.py  checks our AP code against Ultralytics on identical predictions
 │   ├── error_analysis.py  paired bootstrap tests between models, error breakdown
 │   └── compare.py     summary table and report figures
 ├── tests/             pytest unit tests
