@@ -1,0 +1,19 @@
+split,class,boxes,images
+train,loose-meat,66,66
+train,packaging-error,1712,1541
+train,twisted-meat,72,69
+train,unsealed,1055,1055
+train,wrinkle,18,18
+train,(no defect),0,684
+valid,loose-meat,3,3
+valid,packaging-error,34,23
+valid,twisted-meat,3,3
+valid,unsealed,81,81
+valid,wrinkle,0,0
+valid,(no defect),0,14
+test,loose-meat,3,2
+test,packaging-error,23,16
+test,twisted-meat,4,4
+test,unsealed,49,49
+test,wrinkle,0,0
+test,(no defect),0,12

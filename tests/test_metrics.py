@@ -8,6 +8,7 @@ from porkqc.labels import Box
 from porkqc.metrics import (
     average_precision,
     binary_metrics,
+    bootstrap_ci,
     evaluate_map,
     iou,
     match_detections,
@@ -122,6 +123,20 @@ def test_binary_metrics_counts():
 def test_binary_metrics_no_positives_predicted():
     m = binary_metrics([True, False], [False, False])
     assert m["precision"] == 0.0 and m["f1"] == 0.0
+
+
+def test_bootstrap_ci_contains_point_and_is_reproducible():
+    y_true = [True] * 30 + [False] * 10
+    y_pred = [True] * 25 + [False] * 5 + [False] * 8 + [True] * 2
+    point, lo, hi = bootstrap_ci(y_true, y_pred, "recall", n_boot=500)
+    assert point == pytest.approx(25 / 30)
+    assert lo <= point <= hi
+    assert bootstrap_ci(y_true, y_pred, "recall", n_boot=500) == (point, lo, hi)
+
+
+def test_bootstrap_ci_zero_width_when_perfect():
+    point, lo, hi = bootstrap_ci([True, False] * 10, [True, False] * 10, "accuracy", n_boot=200)
+    assert point == lo == hi == 1.0
 
 
 def test_binary_metrics_rejects_bad_input():
