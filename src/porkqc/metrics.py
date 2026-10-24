@@ -222,3 +222,45 @@ def binary_metrics(y_true: Sequence[bool], y_pred: Sequence[bool]) -> dict:
         "accuracy": (tp + tn) / yt.size,
         "false_reject_rate": fp / (fp + tn) if fp + tn else 0.0,
     }
+
+
+def paired_bootstrap_diff(
+    y_true: Sequence[bool],
+    pred_a: Sequence[bool],
+    pred_b: Sequence[bool],
+    metric: str = "recall",
+    n_boot: int = 5000,
+    alpha: float = 0.05,
+    seed: int = 0,
+) -> dict:
+    """Paired bootstrap test of ``metric(B) - metric(A)`` on the same images.
+
+    Both inspectors are evaluated on the *same* resampled images, so image
+    difficulty cancels out and the interval is much tighter than comparing
+    two separate confidence intervals.
+
+    Args:
+        y_true: ``True`` where the tray is truly defective.
+        pred_a: Rejections by inspector A (e.g. the baseline).
+        pred_b: Rejections by inspector B (e.g. the candidate model).
+        metric: Any key returned by :func:`binary_metrics`.
+        n_boot: Number of bootstrap resamples.
+        alpha: 1 - confidence level.
+        seed: Random seed.
+
+    Returns:
+        Dictionary with ``diff`` (point estimate), ``lower``, ``upper`` and
+        ``p_le_0`` (share of resamples where B was not better; a one-sided
+        bootstrap p-value for "B is better than A").
+    """
+    yt = np.asarray(y_true, dtype=bool)
+    a = np.asarray(pred_a, dtype=bool)
+    b = np.asarray(pred_b, dtype=bool)
+    diff = binary_metrics(yt, b)[metric] - binary_metrics(yt, a)[metric]
+    rng = np.random.default_rng(seed)
+    idx = rng.integers(0, yt.size, size=(n_boot, yt.size))
+    d = np.array([binary_metrics(yt[i], b[i])[metric] - binary_metrics(yt[i], a[i])[metric]
+                  for i in idx])
+    lo, hi = np.percentile(d, [100 * alpha / 2, 100 * (1 - alpha / 2)])
+    return {"diff": float(diff), "lower": float(lo), "upper": float(hi),
+            "p_le_0": float(np.mean(d <= 0))}

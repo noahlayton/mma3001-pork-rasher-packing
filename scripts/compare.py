@@ -61,6 +61,7 @@ def summary_table(ev: dict, baseline: dict, bench_cpu: pd.DataFrame,
             "test mAP50": m["test_map50_ultralytics"],
             "test mAP50-95": m["test_map50_95_ultralytics"],
             "mAP50 (own code)": m["test_map50_own"],
+            "AP50 reliable classes": round(reliable_map50(Path("results/eval"), r), 3),
             "threshold": m["threshold"],
             "tray recall": f"{t['recall']:.3f} [{ci['recall'][0]:.2f}-{ci['recall'][1]:.2f}]",
             "false-reject rate": f"{t['false_reject_rate']:.3f} "
@@ -73,7 +74,7 @@ def summary_table(ev: dict, baseline: dict, bench_cpu: pd.DataFrame,
     b, bci = baseline["test"], baseline["test_ci95"]
     rows.append({
         "model": "HOG + colour baseline", "test mAP50": np.nan, "test mAP50-95": np.nan,
-        "mAP50 (own code)": np.nan, "threshold": 0.5,
+        "mAP50 (own code)": np.nan, "AP50 reliable classes": np.nan, "threshold": 0.5,
         "tray recall": f"{b['recall']:.3f} [{bci['recall'][0]:.2f}-{bci['recall'][1]:.2f}]",
         "false-reject rate": f"{b['false_reject_rate']:.3f} "
                              f"[{bci['false_reject_rate'][0]:.2f}-{bci['false_reject_rate'][1]:.2f}]",
@@ -85,7 +86,7 @@ def summary_table(ev: dict, baseline: dict, bench_cpu: pd.DataFrame,
 
 def plot_training(train_dir: Path, main: str, out: Path) -> None:
     """Left: val mAP50-95 per epoch for every run. Right: main run's losses."""
-    fig, (a, b) = plt.subplots(1, 2, figsize=(10, 3.2))
+    fig, (a, b) = plt.subplots(1, 2, figsize=(11, 3.2), gridspec_kw={"wspace": 0.6})
     for r in RUNS:
         f = train_dir / f"{r}_results.csv"
         if not f.exists():
@@ -96,36 +97,46 @@ def plot_training(train_dir: Path, main: str, out: Path) -> None:
     a.set_xlabel("epoch")
     a.set_ylabel("validation mAP50-95")
     a.set_title("Validation accuracy during training", loc="left")
-    a.legend(fontsize=7)
+    a.legend(fontsize=7, loc="upper left", bbox_to_anchor=(1.01, 1.0))
     d = pd.read_csv(train_dir / f"{main}_results.csv")
     d.columns = [c.strip() for c in d.columns]
     b.plot(d.epoch, d["train/box_loss"] + d["train/cls_loss"], color=SERIES[0], label="train")
     b.plot(d.epoch, d["val/box_loss"] + d["val/cls_loss"], color=SERIES[1], label="validation")
-    best = int(d.loc[d["metrics/mAP50-95(B)"].idxmax(), "epoch"])
+    # Ultralytics keeps best.pt by fitness = 0.1 * mAP50 + 0.9 * mAP50-95.
+    fitness = 0.1 * d["metrics/mAP50(B)"] + 0.9 * d["metrics/mAP50-95(B)"]
+    best = int(d.loc[fitness.idxmax(), "epoch"])
     b.axvline(best, color=TEXT_MUTED, linestyle="--", linewidth=1)
-    b.text(best, b.get_ylim()[1] * 0.97, f" best epoch {best}", fontsize=7, color=TEXT_MUTED,
+    b.text(best, b.get_ylim()[1] * 0.97, f" best.pt (epoch {best})", fontsize=7, color=TEXT_MUTED,
            va="top")
     b.set_xlabel("epoch")
     b.set_ylabel("box + class loss")
     b.set_title(f"{LABELS[main]}: training vs validation loss", loc="left")
     b.legend()
-    fig.tight_layout()
     fig.savefig(out)
     plt.close(fig)
 
 
-def plot_tradeoff(summary: pd.DataFrame, ev: dict, out: Path) -> None:
-    """Test mAP50-95 against CPU latency: the accuracy/speed trade-off."""
+def reliable_map50(eval_root: Path, run: str) -> float:
+    """Mean test AP50 over classes with >= 20 test boxes (unsealed, packaging-error)."""
+    pc = pd.read_csv(eval_root / run / "per_class.csv")
+    return float(pc[pc.reliable]["ap50_ultralytics"].mean())
+
+
+def plot_tradeoff(summary: pd.DataFrame, ev: dict, eval_root: Path, out: Path) -> None:
+    """Reliable-class test AP50 against CPU latency: the accuracy/speed trade-off."""
     fig, ax = plt.subplots(figsize=(6.5, 3.6))
     for r in ev:
         row = summary[summary.model == LABELS[r]].iloc[0]
-        ax.scatter(row["CPU ms"], row["test mAP50-95"], s=60, color=COLOUR[r], zorder=3,
+        acc = reliable_map50(eval_root, r)
+        ax.scatter(row["CPU ms"], acc, s=60, color=COLOUR[r], zorder=3,
                    edgecolor="white", linewidth=1.5)
-        ax.annotate(LABELS[r], (row["CPU ms"], row["test mAP50-95"]), fontsize=7,
-                    xytext=(6, 4), textcoords="offset points", color=TEXT_MUTED)
+        # nudge labels of the two near-identical points apart
+        offset = {"y8n_640": (6, -12), "y8n_640_f50": (6, 6)}.get(r, (6, 4))
+        ax.annotate(LABELS[r], (row["CPU ms"], acc), fontsize=7,
+                    xytext=offset, textcoords="offset points", color=TEXT_MUTED)
     ax.set_xlabel("CPU latency per image (ms, median)")
-    ax.set_ylabel("test mAP50-95")
-    ax.set_title("Accuracy vs speed", loc="left")
+    ax.set_ylabel("test AP50, mean of unsealed\n& packaging-error")
+    ax.set_title("Accuracy vs speed (CPU, batch 1)", loc="left")
     fig.tight_layout()
     fig.savefig(out)
     plt.close(fig)
@@ -159,7 +170,7 @@ def plot_resolution(eval_root: Path, out: Path) -> None:
     plt.close(fig)
 
 
-def plot_data_size(ev: dict, out: Path) -> None:
+def plot_data_size(ev: dict, eval_root: Path, out: Path) -> None:
     """Test mAP50 and mAP50-95 against the fraction of training images used."""
     pts = [(f, ev[r]) for r, f in [("y8n_640_f25", 25), ("y8n_640_f50", 50), ("y8n_640", 100)]
            if r in ev]
@@ -170,6 +181,9 @@ def plot_data_size(ev: dict, out: Path) -> None:
     for k, (key, lab) in enumerate([("test_map50_ultralytics", "mAP50"),
                                     ("test_map50_95_ultralytics", "mAP50-95")]):
         ax.plot(x, [p[1][key] for p in pts], marker="o", markersize=8, color=SERIES[k], label=lab)
+    ax.plot(x, [reliable_map50(eval_root, r) for r in ("y8n_640_f25", "y8n_640_f50", "y8n_640")
+                if r in ev], marker="o", markersize=8, color=SERIES[2],
+            label="AP50, unsealed & packaging-error")
     ax.set_xticks(x, [f"{v}%\n(~{round(1085 * v / 100)} originals)" for v in x])
     ax.set_xlabel("share of training data")
     ax.set_ylabel("test score")
@@ -198,7 +212,7 @@ def plot_threshold(eval_root: Path, main: str, out: Path) -> None:
     ax.set_ylabel("rate")
     ax.set_ylim(-0.02, 1.02)
     ax.set_title(f"{LABELS[main]}: choosing the PASS/FAIL threshold", loc="left")
-    ax.legend(fontsize=7, loc="center right")
+    ax.legend(fontsize=7, loc="upper right")
     fig.tight_layout()
     fig.savefig(out)
     plt.close(fig)
@@ -256,9 +270,9 @@ def main() -> None:
     print(summary.to_string(index=False))
 
     plot_training(args.results / "training", args.main, out / "training_curves.png")
-    plot_tradeoff(summary, ev, out / "tradeoff.png")
+    plot_tradeoff(summary, ev, args.results / "eval", out / "tradeoff.png")
     plot_resolution(args.results / "eval", out / "resolution.png")
-    plot_data_size(ev, out / "data_size.png")
+    plot_data_size(ev, args.results / "eval", out / "data_size.png")
     plot_threshold(args.results / "eval", args.main, out / "threshold_sweep.png")
     plot_robustness(args.results / "eval", [args.main, "y8s_640"], out / "robustness.png")
     print(f"saved to {out}/")

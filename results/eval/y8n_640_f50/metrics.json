@@ -1,0 +1,42 @@
+{
+  "run": "y8n_640_f50",
+  "imgsz": 640,
+  "test_map50_own": 0.4782,
+  "test_map50_95_own": 0.2376,
+  "test_map50_ultralytics": 0.4559,
+  "test_map50_95_ultralytics": 0.2143,
+  "threshold": 0.3,
+  "test_tray": {
+    "tp": 59,
+    "fp": 3,
+    "fn": 9,
+    "tn": 9,
+    "precision": 0.9516129032258065,
+    "recall": 0.8676470588235294,
+    "f1": 0.9076923076923077,
+    "accuracy": 0.85,
+    "false_reject_rate": 0.25
+  },
+  "test_tray_ci95": {
+    "accuracy": [
+      0.775,
+      0.925
+    ],
+    "recall": [
+      0.7837725225225225,
+      0.9411977834612104
+    ],
+    "precision": [
+      0.8947368421052632,
+      1.0
+    ],
+    "f1": [
+      0.8503838582677165,
+      0.9538636363636364
+    ],
+    "false_reject_rate": [
+      0.0,
+      0.5
+    ]
+  }
+}
