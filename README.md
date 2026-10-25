@@ -43,8 +43,7 @@ and compression, and benchmarked for production-line speed.
 │   └── compare.py     summary table and report figures
 ├── tests/             pytest unit tests
 ├── docs/              generated HTML API documentation (pdoc)
-├── results/           metrics tables and figures used in the report
-└── report/            written project report
+└── results/           metrics tables and figures used in the report
 ```
 
 ## Setup
